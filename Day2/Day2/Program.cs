@@ -47,13 +47,37 @@ namespace Day2
             return cases;
         }
 
+        static int getLetterCount(char letter, string s)
+        {
+            int count = 0;
+            foreach (char c in s)
+            {
+                if (c == letter)
+                {
+                    ++count;
+                }
+            }
+            return count;
+        }
+
+        static bool isValid(InputCase input_case)
+        {
+            int count = getLetterCount(input_case.letter, input_case.password);
+            return ((count >= input_case.min) && (count <= input_case.max));
+        }
+
         static void Main(string[] args)
         {
-            List<InputCase> cases = readInput("sample_input.txt");
+            int valid_passwords = 0;
+            List<InputCase> cases = readInput("input.txt");
             foreach(InputCase input_case in cases)
             {
-                Console.WriteLine("Input Case: min({0}), max({1}), letter({2}), password({3})", input_case.min, input_case.max, input_case.letter, input_case.password);
+                if(isValid(input_case))
+                {
+                    ++valid_passwords;
+                }
             }
+            Console.WriteLine("Valid passwords: " + valid_passwords);
         }
     }
 }
