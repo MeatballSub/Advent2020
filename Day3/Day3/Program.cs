@@ -27,24 +27,38 @@ namespace Day3
             return (map[location.Y][location.X % width] == '#');
         }
 
-        static void Main(string[] args)
+        static int testSlope(List<string> map, Point slope)
         {
-            List<string> input = readInput("input.txt");
             Point location = new Point(0, 0);
-            Point movement = new Point(3, 1);
 
             int count = 0;
 
-            while(location.Y < input.Count)
+            while (location.Y < map.Count)
             {
-                if(isTree(input, location))
+                if (isTree(map, location))
                 {
                     ++count;
                 }
-                location.Offset(movement);
+                location.Offset(slope);
             }
 
-            Console.WriteLine("Trees hit: " + count);
+            return count;
+        }
+
+        static void Main(string[] args)
+        {
+            List<string> input = readInput("input.txt");
+            Point [] slopes = { new Point(1, 1), new Point(3, 1), new Point(5, 1), new Point(7, 1), new Point(1, 2), };
+
+            int product = 1;
+            foreach (Point slope in slopes)
+            {
+                int count = testSlope(input, slope);
+                product *= count;
+                Console.WriteLine("Trees hit: " + count);
+            }
+
+            Console.WriteLine("Answer: " + product);
         }
     }
 }
