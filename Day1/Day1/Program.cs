@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 
 namespace Day1
 {
@@ -6,7 +7,15 @@ namespace Day1
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
+            using(TextReader reader = File.OpenText("input.txt"))
+            {
+                string line;
+                while ((line = reader.ReadLine()) != null)
+                {
+                    int number = int.Parse(reader.ReadLine());
+                    Console.WriteLine("Read: " + number);
+                }
+            }
         }
     }
 }
