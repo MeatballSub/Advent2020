@@ -13,14 +13,15 @@ namespace Day1
                 string line;
                 while ((line = reader.ReadLine()) != null)
                 {
-                    int number = int.Parse(reader.ReadLine());
-                    numbers[number] = true;
-                }
-                for(int i = 0; i < 2021; ++i)
-                {
-                    if(numbers[i])
+                    int number = int.Parse(line);
+                    int match = 2020 - number;
+                    if (numbers[match])
                     {
-                        Console.WriteLine("Found: " + i);
+                        Console.WriteLine("Answer: {0} * {1} = {2}", number, match, number * match);
+                    }
+                    else
+                    {
+                        numbers[number] = true;
                     }
                 }
             }
