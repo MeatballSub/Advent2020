@@ -43,59 +43,146 @@ namespace Day8
             }
         }
     }
+
+    static class MockProgram
+    {
+        static public List<Instruction> instructions = new List<Instruction>();
+    }
+
+    class CPUState
+    {
+        public int accumulator;
+        public int instruction_counter;
+        public bool terminated;
+        public bool modified;
+
+        public CPUState()
+        {
+            accumulator = 0;
+            instruction_counter = 0;
+            terminated = false;
+            modified = false;
+        }
+
+        public CPUState(CPUState state)
+        {
+            accumulator = state.accumulator;
+            instruction_counter = state.instruction_counter;
+            terminated = state.terminated;
+            modified = state.modified;
+        }
+
+        void execute()
+        {
+            if (instruction_counter == MockProgram.instructions.Count)
+            {
+                terminated = true;
+            }
+            else
+            {
+                Instruction instruction = MockProgram.instructions[instruction_counter];
+                //Console.WriteLine("Executing: " + instruction.ToString());
+                if (instruction.type == "nop")
+                {
+                    ++instruction_counter;
+                }
+                else if (instruction.type == "acc")
+                {
+                    accumulator += instruction.operand;
+                    ++instruction_counter;
+                }
+                else if (instruction.type == "jmp")
+                {
+                    instruction_counter += instruction.operand;
+                }
+            }
+        }
+
+        void toggleExecute()
+        {
+            if (instruction_counter == MockProgram.instructions.Count)
+            {
+                terminated = true;
+            }
+            else
+            {
+                Instruction instruction = MockProgram.instructions[instruction_counter];
+                if (instruction.type == "nop")
+                {
+                    instruction_counter += instruction.operand;
+                }
+                else if (instruction.type == "acc")
+                {
+                    accumulator += instruction.operand;
+                    ++instruction_counter;
+                }
+                else if (instruction.type == "jmp")
+                {
+                    ++instruction_counter;
+                }
+            }
+        }
+
+        public Tuple<CPUState,CPUState> nonDeterministicExecute()
+        {
+            CPUState noChange = new CPUState(this);
+            CPUState toggle = (!modified) ? new CPUState(this) : null;
+            noChange.execute();
+            if (toggle != null)
+            {
+                toggle.modified = true;
+                toggle.toggleExecute();
+            }
+            return new Tuple<CPUState, CPUState>(noChange, toggle);
+        }
+    }
+
     class Program
     {
-        static List<Instruction> readInput(string file_name)
+        static void readInput(string file_name)
         {
-            List<Instruction> program = new List<Instruction>();
             using(TextReader reader = File.OpenText(file_name))
             {
                 string line;
                 while((line = reader.ReadLine()) != null)
                 {
-                    program.Add(new Instruction(line));
+                    MockProgram.instructions.Add(new Instruction(line));
                 }
-            }
-            return program;
-        }
-
-        static public int accumulator = 0;
-        static public int instruction_counter = 0;
-
-        static void execute(Instruction instruction)
-        {
-            //Console.WriteLine("Executing: " + instruction.ToString());
-            if(instruction.type == "nop")
-            {
-                ++instruction_counter;
-            }
-            else if(instruction.type == "acc")
-            {
-                accumulator += instruction.operand;
-                ++instruction_counter;
-            }
-            else if(instruction.type == "jmp")
-            {
-                instruction_counter += instruction.operand;
             }
         }
 
         static void Main(string[] args)
         {
+            int final_accumulator = 0;
             HashSet<int> executed_instructions = new HashSet<int>();
-            List<Instruction> program = readInput("input.txt");
-            while(true)
+            readInput("input.txt");
+            CPUState start = new CPUState();
+            Queue<CPUState> states = new Queue<CPUState>();
+            states.Enqueue(start);
+            while(states.Count > 0)
             {
-                if (executed_instructions.Add(instruction_counter))
+                CPUState state = states.Dequeue();
+                Tuple<CPUState, CPUState> new_states = state.nonDeterministicExecute();
+                if (new_states.Item1.terminated)
                 {
-                    execute(program[instruction_counter]);
+                    final_accumulator = new_states.Item1.accumulator;
+                    break;
+                }
+                else if (new_states.Item2 != null && new_states.Item2.terminated)
+                {
+                    final_accumulator = new_states.Item2.accumulator;
+                    break;
                 }
                 else
                 {
-                    Console.WriteLine("Accumulator: " + accumulator);
-                    break;
+                    states.Enqueue(new_states.Item1);
+                    if (new_states.Item2 != null)
+                    {
+                        states.Enqueue(new_states.Item2);
+                    }
                 }
             }
+            Console.WriteLine("Accumulator: " + final_accumulator);
         }
     }
 }
