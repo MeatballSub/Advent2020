@@ -60,12 +60,29 @@ namespace Day5
 
         static void Main(string[] args)
         {
+            int max_possible = 128 * 8;
+            bool[] taken_seats = new bool[max_possible];
             List<BoardingPass> boarding_passes = readInput("input.txt");
-            //foreach(BoardingPass pass in boarding_passes)
-            //{
-            //    Console.WriteLine(pass.ToString());
-            //}
-            Console.WriteLine("Max seat: " + boarding_passes.Max(t => t.seat));
+            foreach(BoardingPass pass in boarding_passes)
+            {
+                //Console.WriteLine(pass.ToString());
+                taken_seats[pass.seat] = true;
+            }
+
+            bool found_first_seat = false;
+            for(int i=0; i < max_possible; ++i)
+            {
+                if(taken_seats[i])
+                {
+                    found_first_seat = true;
+                }
+                else if(found_first_seat)
+                {
+                    Console.WriteLine("My seat: " + i);
+                    break;
+                }
+            }
+            //Console.WriteLine("Max seat: " + boarding_passes.Max(t => t.seat));
         }
     }
 }
