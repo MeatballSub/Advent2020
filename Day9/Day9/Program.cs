@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace Day9
 {
@@ -45,23 +46,60 @@ namespace Day9
             return numbers;
         }
 
-        static void findFirstMismatch(List<Int64> input, int preamble_length)
+        static (int index, Int64 value) findFirstMismatch(List<Int64> input, int preamble_length)
         {
+            int index = -1;
+            Int64 value = -1;
             for(int i = preamble_length; i < input.Count; ++i)
             {
                 Tuple<Int64, Int64> foundSum = findSumInRange(input, input[i], i - preamble_length, i);
                 if(foundSum == null)
                 {
-                    Console.WriteLine("Mismatch found at index({0}), value({1})", i, input[i]);
+                    index = i;
+                    value = input[i];
                     break;
                 }
             }
+            return (index, value);
+        }
+
+        static (int, int) findContiguousSum(List<Int64> input, Int64 target)
+        {
+            int start = 0;
+            int end = 0;
+            Int64 sum = 0;
+
+            while(sum != target)
+            {
+                if(sum < target)
+                {
+                    sum += input[end];
+                    ++end;
+                }
+                else
+                {
+                    sum -= input[start];
+                    ++start;
+                }
+            }
+
+            return (start, end);
+        }
+
+        static Int64 findMinMaxSum(List<Int64> input, int start_index, int stop_index)
+        {
+            Int64 min = input.GetRange(start_index, stop_index - start_index).Min();
+            Int64 max = input.GetRange(start_index, stop_index - start_index).Max();
+
+            return min + max;
         }
 
         static void Main(string[] args)
         {
             List<Int64> input = readInput("input.txt");
-            findFirstMismatch(input, 25);
+            (int index, Int64 value) = findFirstMismatch(input, 25);
+            (int start, int end) = findContiguousSum(input, value);
+            Console.WriteLine("Answer: " + findMinMaxSum(input, start, end));
         }
     }
 }
