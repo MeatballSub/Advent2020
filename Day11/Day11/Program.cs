@@ -50,7 +50,46 @@ namespace Day11
             return neighbors;
         }
 
-        public bool evolve()
+        public bool isOccupied(int seat_x, int seat_y, int dir_x, int dir_y)
+        {
+            bool occupied = false;
+            int step_count = 1;
+            int step_x = seat_x + (step_count * dir_x);
+            int step_y = seat_y + (step_count * dir_y);
+            while(boundsCheck(step_x,step_y))
+            {
+                if(!isFloor(step_x, step_y))
+                {
+                    occupied = isOccupied(step_x, step_y);
+                    break;
+                }
+                ++step_count;
+                step_x = seat_x + (step_count * dir_x);
+                step_y = seat_y + (step_count * dir_y);
+            }
+            return occupied;
+        }
+
+        public int getVisibleCount(int seat_x, int seat_y)
+        {
+            int neighbors = 0;
+            for (int y = -1; y < 2; ++y)
+            {
+                for (int x = -1; x < 2; ++x)
+                {
+                    if (x != 0 || y != 0)
+                    {
+                        if (isOccupied(seat_x, seat_y, x, y))
+                        {
+                            ++neighbors;
+                        }
+                    }
+                }
+            }
+            return neighbors;
+        }
+
+        public bool evolve1()
         {
             bool changed = false;
             char[][] new_map = map.Select(item => item.ToArray()).ToArray();
@@ -73,6 +112,41 @@ namespace Day11
                         else
                         {
                             if (neighbors == 0)
+                            {
+                                new_map[y][x] = '#';
+                                changed = true;
+                            }
+                        }
+                    }
+                }
+            }
+            map = new_map;
+            return changed;
+        }
+
+        public bool evolve2()
+        {
+            bool changed = false;
+            char[][] new_map = map.Select(item => item.ToArray()).ToArray();
+
+            for (int y = 0; y < map.GetLength(0); ++y)
+            {
+                for (int x = 0; x < map[y].GetLength(0); ++x)
+                {
+                    if (!isFloor(x, y))
+                    {
+                        int visible = getVisibleCount(x, y);
+                        if (isOccupied(x, y))
+                        {
+                            if (visible >= 5)
+                            {
+                                new_map[y][x] = 'L';
+                                changed = true;
+                            }
+                        }
+                        else
+                        {
+                            if (visible == 0)
                             {
                                 new_map[y][x] = '#';
                                 changed = true;
@@ -134,7 +208,7 @@ namespace Day11
             GameOfLife game_of_life = new GameOfLife(map);
 
             //Console.WriteLine(game_of_life.ToString());
-            while(game_of_life.evolve())
+            while(game_of_life.evolve2())
             {
                 //Console.WriteLine(game_of_life.ToString());
             }
