@@ -9,7 +9,7 @@ namespace Day6
     {
         public List<string> people;
 
-        public int getYesCount()
+        public int getYesCountPart1()
         {
             HashSet<char> yes = new HashSet<char>();
             foreach(string person in people)
@@ -22,6 +22,32 @@ namespace Day6
             return yes.Count;
         }
 
+        public int getYesCountPart2()
+        {
+            bool first_person = true;
+            HashSet<char> yes = new HashSet<char>();
+            foreach (string person in people)
+            {
+                if (first_person)
+                {
+                    first_person = false;
+                    foreach (char question in person)
+                    {
+                        yes.Add(question);
+                    }
+                }
+                else
+                {
+                    yes.IntersectWith(person);
+                    if(yes.Count == 0)
+                    {
+                        break;
+                    }
+                }
+            }
+            return yes.Count;
+        }
+
         public override string ToString()
         {
             StringBuilder string_value = new StringBuilder();
@@ -29,7 +55,7 @@ namespace Day6
             {
                 string_value.AppendLine(person);
             }
-            string_value.AppendLine("Yes Count: " + getYesCount());
+            string_value.AppendLine("Yes Count: " + getYesCountPart2());
             string_value.AppendLine();
             return string_value.ToString();
         }
@@ -78,7 +104,7 @@ namespace Day6
             foreach(Group group in groups)
             {
                 //Console.WriteLine(group.ToString());
-                sum += group.getYesCount();
+                sum += group.getYesCountPart2();
             }
             Console.WriteLine("Sum: " + sum);
         }
