@@ -129,6 +129,19 @@ namespace Day7
             return placeable.Count;
         }
 
+        static int mustContain(string color)
+        {
+            int count = 0;
+
+            foreach(KeyValuePair<string,int> kvp in bags[color].contains)
+            {
+                count += kvp.Value;
+                count += kvp.Value * mustContain(kvp.Key);
+            }
+
+            return count;
+        }
+
         static void Main(string[] args)
         {
             string color = "shiny gold";
@@ -140,6 +153,7 @@ namespace Day7
             //    Console.WriteLine(kvp.Value.ToString());
             //}
             Console.WriteLine("Can eventually contain '{0}': {1}", color, canEventuallyContain(color));
+            Console.WriteLine("Can eventually contain '{0}': {1}", color, mustContain(color));
         }
     }
 }
