@@ -6,11 +6,13 @@ using System.Text;
 
 namespace Day17
 {
+    using KeyType = System.ValueTuple<int, int, int, int>;
+
     public static class Constants
     {
         public const bool tracing = false;
     }
-
+    
     class ConwayCube
     {
         public int neigbor_count;
@@ -21,23 +23,14 @@ namespace Day17
             neigbor_count = count;
             is_active = active;
         }
-
-        public ConwayCube():this(0,false)
-        {
-        }
-
-        public override string ToString()
-        {
-            return string.Format("Is active? {0}, active neighbors({1})", is_active, neigbor_count);
-        }
     }
     class PocketDimension
     {
-        public Dictionary<(int, int, int), ConwayCube> state;
-        public HashSet<(int, int, int)> frontier;
+        public Dictionary<KeyType, ConwayCube> state;
+        public HashSet<KeyType> frontier;
         public int active_count;
 
-        private void set((int, int, int) key, bool is_active, int neighbor_count)
+        private void set(KeyType key, bool is_active, int neighbor_count)
         {
             if (state.ContainsKey(key))
             {
@@ -52,7 +45,7 @@ namespace Day17
             frontier.Add(key);
         }
 
-        private void increment((int, int, int) key, int amount)
+        private void increment(KeyType key, int amount)
         {
             if (state.ContainsKey(key))
             {
@@ -66,19 +59,22 @@ namespace Day17
             frontier.Add(key);
         }
 
-        private List<(int,int,int)> getNeighborKeys(int x, int y, int z)
+        private List<KeyType> getNeighborKeys(int x, int y, int z, int w)
         {
-            List<(int, int, int)> neighbor_keys = new List<(int, int, int)>();
+            List<KeyType> neighbor_keys = new List<KeyType>();
 
-            for (int z_offset = -1; z_offset <= 1; ++z_offset)
+            for (int w_offset = -1; w_offset <= 1; ++w_offset)
             {
-                for (int y_offset = -1; y_offset <= 1; ++y_offset)
+                for (int z_offset = -1; z_offset <= 1; ++z_offset)
                 {
-                    for (int x_offset = -1; x_offset <= 1; ++x_offset)
+                    for (int y_offset = -1; y_offset <= 1; ++y_offset)
                     {
-                        if ((x_offset != 0) || (y_offset != 0) || (z_offset != 0))
+                        for (int x_offset = -1; x_offset <= 1; ++x_offset)
                         {
-                            neighbor_keys.Add((x + x_offset, y + y_offset, z + z_offset));
+                            if ((x_offset != 0) || (y_offset != 0) || (z_offset != 0) || (w_offset != 0))
+                            {
+                                neighbor_keys.Add((x + x_offset, y + y_offset, z + z_offset, w + w_offset));
+                            }
                         }
                     }
                 }
@@ -87,16 +83,16 @@ namespace Day17
             return neighbor_keys;
         }
 
-        private List<(int,int,int)> getNeighborKeys((int,int,int) key)
+        private List<KeyType> getNeighborKeys(KeyType key)
         {
-            return getNeighborKeys(key.Item1, key.Item2, key.Item3);
+            return getNeighborKeys(key.Item1, key.Item2, key.Item3, key.Item4);
         }
 
         private void initializeActive(int x_coord, int y_coord)
         {
-            var key = (x_coord, y_coord, 0);
+            var key = (x_coord, y_coord, 0, 0);
             int new_neighbor_count = 0;
-            foreach(var neighbor_key in getNeighborKeys(x_coord, y_coord, 0))
+            foreach(var neighbor_key in getNeighborKeys(x_coord, y_coord, 0, 0))
             {
                 increment(neighbor_key, +1);
 
@@ -111,20 +107,20 @@ namespace Day17
             ++active_count;
         }
 
-        private bool evolveInactive((int,int,int) key)
+        private bool evolveInactive(KeyType key)
         {
             return (state[key].neigbor_count == 3);
         }
 
-        private bool evolveActive((int,int,int) key)
+        private bool evolveActive(KeyType key)
         {
             int neighbors = state[key].neigbor_count;
             return ((neighbors != 2) && (neighbors != 3));
         }
 
-        private List<(int,int,int)> getNeedsUpdate()
+        private List<KeyType> getNeedsUpdate()
         {
-            List<(int, int, int)> needs_update = new List<(int, int, int)>();
+            List<KeyType> needs_update = new List<KeyType>();
 
             foreach (var potential_key in frontier)
             {
@@ -148,7 +144,7 @@ namespace Day17
             return needs_update;
         }
 
-        private void updateNeighbors((int,int,int) key, int amount)
+        private void updateNeighbors(KeyType key, int amount)
         {
             foreach (var neighbor in getNeighborKeys(key))
             {
@@ -156,7 +152,7 @@ namespace Day17
             }
         }
 
-        private void update((int,int,int) key, bool is_active, int amount)
+        private void update(KeyType key, bool is_active, int amount)
         {
             updateNeighbors(key, amount);
             state[key].is_active = is_active;
@@ -164,17 +160,17 @@ namespace Day17
             active_count += amount;
         }
 
-        private void kill((int,int,int) key)
+        private void kill(KeyType key)
         {
             update(key, false, -1);
         }
 
-        private void birth((int,int,int) key)
+        private void birth(KeyType key)
         {
             update(key, true, +1);
         }
 
-        private void update((int,int,int) key)
+        private void update(KeyType key)
         {
             if(state[key].is_active)
             {
@@ -188,18 +184,18 @@ namespace Day17
 
         public void evolve()
         {
-            List<(int, int, int)> needs_update = getNeedsUpdate();
+            List<KeyType> needs_update = getNeedsUpdate();
             frontier.Clear();
             if (Constants.tracing)
             {
                 foreach (var update_key in needs_update)
                 {
-                    Console.WriteLine("Updating: ({0},{1},{2}), neighbor count({3})", update_key.Item1, update_key.Item2, update_key.Item3, state[update_key].neigbor_count);
+                    Console.WriteLine("Updating: ({0}), neighbor count({1})", update_key.ToString(), state[update_key].neigbor_count);
                     foreach (var neighbor in getNeighborKeys(update_key))
                     {
                         if (state.ContainsKey(neighbor) && state[neighbor].is_active)
                         {
-                            Console.WriteLine("    ({0},{1},{2})", neighbor.Item1, neighbor.Item2, neighbor.Item3);
+                            Console.WriteLine("    ({0})", neighbor.ToString());
                         }
                     }
                 }
@@ -212,8 +208,8 @@ namespace Day17
 
         public PocketDimension(List<string> initial_state)
         {
-            state = new Dictionary<(int, int, int), ConwayCube>();
-            frontier = new HashSet<(int, int, int)>();
+            state = new Dictionary<KeyType, ConwayCube>();
+            frontier = new HashSet<KeyType>();
             active_count = 0;
 
             for(int y = 0; y < initial_state.Count; ++y)
@@ -241,27 +237,33 @@ namespace Day17
             int min_z = state.Keys.Min(z => z.Item3);
             int max_z = state.Keys.Max(z => z.Item3);
 
-            for(int z = min_z + 1; z < max_z; ++z)
+            int min_w = state.Keys.Min(w => w.Item3);
+            int max_w = state.Keys.Max(w => w.Item3);
+
+            for(int w = min_w + 1; w < max_w; ++w)
             {
-                sb.AppendLine(string.Format("z={0}", z));
-                int width = max_x - min_x - 1;
-                sb.AppendLine(new string(' ', width) + " 0");
-                for (int y = min_y + 1 ; y < max_y; ++y)
+                for (int z = min_z + 1; z < max_z; ++z)
                 {
-                    sb.Append(string.Format("{0,2}: ", y));
-                    for(int x = min_x + 1; x < max_x; ++x)
+                    sb.AppendLine(string.Format("z={0}, w={1}", z, w));
+                    int width = max_x - min_x - 1;
+                    sb.AppendLine(new string(' ', width) + " 0");
+                    for (int y = min_y + 1; y < max_y; ++y)
                     {
-                        char c = '.';
-                        var key = (x, y, z);
-                        if(state.ContainsKey(key) && state[key].is_active)
+                        sb.Append(string.Format("{0,2}: ", y));
+                        for (int x = min_x + 1; x < max_x; ++x)
                         {
-                            c = '#';
+                            char c = '.';
+                            var key = (x, y, z, w);
+                            if (state.ContainsKey(key) && state[key].is_active)
+                            {
+                                c = '#';
+                            }
+                            sb.Append(c);
                         }
-                        sb.Append(c);
+                        sb.AppendLine();
                     }
                     sb.AppendLine();
                 }
-                sb.AppendLine();
             }
 
             return sb.ToString();
@@ -284,7 +286,7 @@ namespace Day17
             return lines;
         }
 
-        static int part1(string file_name)
+        static int part2(string file_name)
         {
             PocketDimension dimension = new PocketDimension(readInput(file_name));
 
@@ -309,7 +311,7 @@ namespace Day17
 
         static void Main(string[] args)
         {
-            Console.WriteLine(part1("input.txt"));
+            Console.WriteLine(part2("input.txt"));
         }
     }
 }
