@@ -87,7 +87,14 @@ namespace Day13
             {
                 if(bus_ids[i] != 0)
                 {
-                    equations.Add((bus_ids[i]-i,bus_ids[i]));
+                    // get offset
+                    long congruence = bus_ids[i] - i;
+                    // fit it into modular range
+                    congruence = congruence % bus_ids[i];
+                    // might be negative, guarantee it's positive
+                    congruence = (congruence + bus_ids[i]) % bus_ids[i];
+
+                    equations.Add((congruence, bus_ids[i]));
                 }
             }
 
@@ -99,6 +106,29 @@ namespace Day13
             return equations;
         }
 
+        static long safeCracker(List<(Int64, Int64)> equations)
+        {
+            long answer_c = 0;
+            long answer_m = 0;
+            foreach((long congruence, long modulus) in equations)
+            {
+                if (answer_m == 0)
+                {
+                    answer_c = congruence;
+                    answer_m = modulus;
+                }
+                else
+                {
+                    while (answer_c % modulus != congruence)
+                    {
+                        answer_c += answer_m;
+                    }
+                    answer_m *= modulus;
+                }
+            }
+            return answer_c;
+        }
+
         static void Main(string[] args)
         {
             (int earliest_departure, Int64[] bus_ids) = readInput("input.txt");
@@ -107,6 +137,7 @@ namespace Day13
             List<(Int64, Int64)> equations = getEquations(bus_ids);
             Int64 t = ChineseRemainderTheorem.solve(equations);
             Console.WriteLine("Staggered departures start at: " + t);
+            Console.WriteLine("Staggered departures start at: " + safeCracker(equations));
         }
     }
 }
